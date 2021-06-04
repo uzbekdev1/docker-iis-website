@@ -5,10 +5,13 @@ SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPref
 # feature
 RUN Install-WindowsFeature Web-Windows-Auth
 
-# .net
+# config
+ENV DOTNET_RUNNING_IN_CONTAINER=true
 ENV DOTNET_VERSION 5.0.6
 ENV DOTNET_DOWNLOAD_URL https://download.visualstudio.microsoft.com/download/pr/24847c36-9f3a-40c1-8e3f-4389d954086d/0e8ae4f4a8e604a6575702819334d703/dotnet-hosting-$DOTNET_VERSION-win.exe
 ENV DOTNET_DOWNLOAD_SHA 9f48484fe0c55c3c3065e49f9cc3576bfd99703f250e5420bb3d2599af02c0380cd2f42278b9ce86088d70f19d171daa8fa9c504e14534b36c01afc282b4de1b
+
+# .net
 RUN Invoke-WebRequest $Env:DOTNET_DOWNLOAD_URL -OutFile WindowsHosting.exe; `
     if ((Get-FileHash WindowsHosting.exe -Algorithm sha512).Hash -ne $Env:DOTNET_DOWNLOAD_SHA) { `
         Write-Host 'CHECKSUM VERIFICATION FAILED!'; `
@@ -22,11 +25,7 @@ RUN Invoke-WebRequest $Env:DOTNET_DOWNLOAD_URL -OutFile WindowsHosting.exe; `
     Remove-Item -Force WindowsHosting.exe
 RUN setx /M PATH $($Env:PATH + ';' + $Env:ProgramFiles + '\dotnet')
 
-# Enabl
-ENV DOTNET_RUNNING_IN_CONTAINER=true
-
 # site
- 
  RUN Remove-Website -Name 'Default Web Site'; `
     New-WebAppPool -Name 'webapp'; `
     Set-ItemProperty IIS:\AppPools\webapp -Name managedRuntimeVersion -Value ''; `
